@@ -1,0 +1,949 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>大傷模擬技術考-重返921</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft JhengHei', 'Noto Sans TC', sans-serif;
+            background-color: #111827;
+            color: #e5e7eb;
+            min-height: 100vh;
+        }
+        
+        .game-container {
+            max-width: 600px;
+            margin: 0 auto;
+            min-height: 100vh;
+            background-color: rgba(31, 41, 55, 0.95);
+            padding: 20px;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 900;
+            color: #dc2626;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        h2 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #ef4444;
+            margin-bottom: 1rem;
+        }
+
+        .btn-primary {
+            background-color: #dc2626;
+            color: white;
+            font-weight: bold;
+            padding: 16px 24px;
+            border-radius: 8px;
+            width: 100%;
+            margin-bottom: 12px;
+            font-size: 20px;
+            border: 1px solid #b91c1c;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            box-shadow: 0 4px 0 #991b1b;
+        }
+
+        .btn-primary:hover {
+            background-color: #b91c1c;
+            transform: translateY(2px);
+            box-shadow: 0 2px 0 #991b1b;
+        }
+
+        .btn-primary:active {
+            transform: translateY(4px);
+            box-shadow: none;
+        }
+
+        .btn-secondary {
+            background-color: #4b5563;
+            color: #f3f4f6;
+            font-weight: bold;
+            padding: 12px 24px;
+            border-radius: 8px;
+            width: 100%;
+            margin-bottom: 12px;
+            font-size: 18px;
+            border: 1px solid #374151;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 4px 0 #374151;
+        }
+
+        .btn-secondary:hover {
+            background-color: #374151;
+            transform: translateY(2px);
+            box-shadow: 0 2px 0 #374151;
+        }
+        
+        .input-box {
+            background-color: #1f2937;
+            border: 2px solid #4b5563;
+            color: white;
+            border-radius: 8px;
+            padding: 16px;
+            width: 100%;
+            font-size: 20px;
+            margin-bottom: 16px;
+            text-align: center;
+            font-family: monospace;
+            letter-spacing: 0.1em;
+        }
+
+        .input-box:focus {
+            outline: none;
+            border-color: #dc2626;
+        }
+
+        .timer-badge {
+            position: fixed;
+            top: 15px;
+            right: 15px;
+            background: #000;
+            color: #ef4444;
+            padding: 8px 16px;
+            border-radius: 4px;
+            font-size: 1.5rem;
+            border: 2px solid #b91c1c;
+            font-family: monospace;
+            letter-spacing: 0.1em;
+            box-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
+        }
+
+        .mission-box {
+            background: rgba(17, 24, 39, 0.8);
+            border-left: 4px solid #ef4444;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .hint-box {
+            background: rgba(6, 78, 59, 0.3);
+            border: 1px solid #059669;
+            color: #34d399;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+        }
+
+        .choice-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .choice-btn {
+            padding: 0;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .choice-img-container {
+            width: 100%;
+            height: 120px;
+            background-color: #374151;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .choice-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .choice-text {
+            padding: 12px;
+            font-size: 14px;
+        }
+
+        .sortable-item {
+            background: #374151;
+            border: 1px solid #4b5563;
+            color: white;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .arrow-btn {
+            background: #1f2937;
+            border: none;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 18px;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+
+        .arrow-btn:hover {
+            background: #111827;
+            transform: scale(1.1);
+        }
+
+        .arrow-btn:active {
+            transform: scale(0.95);
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .shake-animation {
+            animation: shake 0.5s;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        .pulse-red {
+            animation: pulse-red 2s infinite;
+        }
+
+        @keyframes pulse-red {
+            0% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(220, 38, 38, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0); }
+        }
+
+        /* 圖片替代方案 */
+        .img-placeholder {
+            background: #374151;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            color: #9ca3af;
+            font-size: 14px;
+        }
+
+        .img-placeholder-icon {
+            font-size: 48px;
+            margin-bottom: 8px;
+            opacity: 0.5;
+        }
+
+        /* 場景圖片 */
+        .scene-img {
+            width: 100%;
+            height: auto;
+            display: block;
+            min-height: 200px;
+            background: #374151;
+            border-radius: 8px;
+        }
+
+        /* 完成證書樣式 */
+        .certificate {
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            padding: 2px;
+            border-radius: 8px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            transform: rotate(1deg);
+        }
+
+        .certificate-inner {
+            background: #000;
+            padding: 30px;
+            border-radius: 6px;
+            text-align: center;
+        }
+
+        .medal {
+            font-size: 4rem;
+            color: #fbbf24;
+            text-shadow: 0 0 20px rgba(251, 191, 36, 0.5);
+        }
+    </style>
+</head>
+<body>
+
+<!-- Timer Display -->
+<div id="gameTimer" class="timer-badge hidden">00:00</div>
+
+<!-- Main Container -->
+<div id="app" class="game-container">
+    <div class="text-center">
+        <p style="margin-top: 20px;">載入中...</p>
+    </div>
+</div>
+
+<script>
+    // 全域狀態管理
+    const state = {
+        currentStage: 0,
+        startTime: null,
+        timerInterval: null,
+        triageOrder: []
+    };
+
+    // GitHub Pages 圖片路徑設定
+    // 請將圖片上傳到 GitHub repository 的 images 資料夾
+    const IMAGE_PATH = './images/';
+    
+    // Padlet 連結
+    const padletLinks = {
+        sos: "https://padlet.com/phyllis41/padlet-bl0b1p0sbf888tpq/wish/goElQyGMYV7vW3yY",
+        patientC: "https://padlet.com/phyllis41/padlet-bl0b1p0sbf888tpq/wish/NvylWE5wGq03W0OX",
+        patientA: "https://padlet.com/phyllis41/padlet-bl0b1p0sbf888tpq/wish/MxrmZYxq2AXdQGOq",
+        patientD: "https://padlet.com/phyllis41/padlet-bl0b1p0sbf888tpq/wish/do3MQJPR5mNgW15w",
+        final: "https://padlet.com/phyllis41/padlet-bl0b1p0sbf888tpq/wish/mDRxWB72G63Oajb1"
+    };
+
+    // 傷患資料
+    const victims = [
+        { id: 'C', text: '傷患C：臉色蒼白、噴射狀出血', desc: '右手肘動脈破裂' },
+        { id: 'A', text: '傷患A：褲子染紅、指縫流血', desc: '雙手壓大腿' },
+        { id: 'D', text: '傷患D：呼吸喘、不說話', desc: '臉有血痕、呆坐' }, 
+        { id: 'E', text: '傷患E：胸口被砸痛', desc: '呼吸平順' },
+        { id: 'B', text: '傷患B：嚇死我了', desc: '腿軟但可對話' }
+    ];
+    const correctTriageOrder = ['C', 'A', 'D', 'E', 'B'];
+
+    // 計時器
+    function startTimer() {
+        state.startTime = Date.now();
+        document.getElementById('gameTimer').classList.remove('hidden');
+        
+        state.timerInterval = setInterval(() => {
+            const delta = Date.now() - state.startTime;
+            const minutes = Math.floor(delta / 60000);
+            const seconds = Math.floor((delta % 60000) / 1000);
+            document.getElementById('gameTimer').textContent = 
+                `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }, 1000);
+    }
+
+    function stopTimer() {
+        clearInterval(state.timerInterval);
+        return document.getElementById('gameTimer').textContent;
+    }
+
+    // 創建圖片元素
+    function createImage(filename, alt, fallbackIcon) {
+        const container = document.createElement('div');
+        container.className = 'choice-img-container';
+        
+        const img = document.createElement('img');
+        img.src = IMAGE_PATH + filename;
+        img.alt = alt;
+        img.className = 'choice-img';
+        
+        img.onerror = function() {
+            container.innerHTML = `
+                <div class="img-placeholder">
+                    <div class="img-placeholder-icon">${fallbackIcon}</div>
+                    <div>${alt}</div>
+                </div>
+            `;
+        };
+        
+        container.appendChild(img);
+        return container.outerHTML;
+    }
+
+    // 渲染函數
+    function render() {
+        const app = document.getElementById('app');
+        app.innerHTML = '';
+        app.className = 'game-container fade-in';
+        
+        const content = stages[state.currentStage]();
+        app.innerHTML = content.html;
+        
+        if (content.init) {
+            setTimeout(content.init, 100);
+        }
+    }
+
+    // 輸入驗證元件
+    function createInputValidator(correctCode, altCodes, successCallback, errorMsg) {
+        return function() {
+            const input = document.getElementById('codeInput');
+            const value = input.value.trim();
+            
+            if (value === correctCode || (altCodes && altCodes.includes(value))) {
+                successCallback();
+            } else {
+                input.classList.add('shake-animation');
+                alert(errorMsg || '密碼錯誤，請重新輸入');
+                setTimeout(() => input.classList.remove('shake-animation'), 500);
+            }
+        };
+    }
+
+    // 關卡內容
+    const stages = {
+        // 開始畫面
+        0: () => ({
+            html: `
+                <div class="text-center">
+                    <div style="border: 4px solid #dc2626; display: inline-block; padding: 8px; border-radius: 50%; margin-bottom: 24px;" class="pulse-red">
+                        <span style="font-size: 4rem;">⚠️</span>
+                    </div>
+                    <h1>大傷模擬</h1>
+                    <h2 style="color: white;">重返 921</h2>
+                    
+                    <div class="mission-box" style="margin: 32px 0; text-align: left;">
+                        <p style="color: #ef4444; font-weight: bold; margin-bottom: 8px;">
+                            ⚠️ 任務簡報
+                        </p>
+                        <p style="color: #d1d5db; line-height: 1.6;">
+                            地面劇烈搖晃，建築物坍塌。你們被困在災難現場。<br>
+                            外界救援需要時間，你們只有 <span style="color: #ef4444; font-weight: bold; font-size: 1.2em;">15分鐘</span>。
+                        </p>
+                        <p style="color: #d1d5db; margin-top: 12px;">
+                            任務目標：依照 <strong style="color: white;">START 檢傷分類</strong> 施以急救，穩定傷者。
+                        </p>
+                    </div>
+                    
+                    <button id="startBtn" class="btn-primary pulse-red">
+                        開始任務
+                    </button>
+                </div>
+            `,
+            init: function() {
+                document.getElementById('startBtn').onclick = function() {
+                    startTimer();
+                    state.currentStage = 1;
+                    render();
+                };
+            }
+        }),
+
+        // 地震反應
+        1: () => ({
+            html: `
+                <div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid #374151; padding-bottom: 8px;">
+                        <h2>⚠️ 緊急狀況</h2>
+                        <span style="background: #7f1d1d; color: #fca5a5; padding: 4px 8px; border-radius: 4px; font-size: 12px;">LIVE</span>
+                    </div>
+                    <p style="font-size: 18px; margin-bottom: 8px; color: #d1d5db;">地點：健康與護理教室</p>
+                    <p style="font-size: 24px; font-weight: bold; margin-bottom: 24px; text-align: center;">地震發生中！你的第一反應？</p>
+                    
+                    <div class="choice-grid">
+                        <button class="btn-secondary choice-btn" onclick="checkEarthquakeAnswer(true)">
+                            ${createImage('desk.png', '桌子', '🪑')}
+                            <div class="choice-text">躲在桌子下</div>
+                        </button>
+                        <button class="btn-secondary choice-btn" onclick="checkEarthquakeAnswer(false)">
+                            ${createImage('chair.png', '椅子', '💺')}
+                            <div class="choice-text">躲在椅子旁</div>
+                        </button>
+                        <button class="btn-secondary choice-btn" onclick="checkEarthquakeAnswer(false)">
+                            ${createImage('pillar.png', '柱子', '🏛️')}
+                            <div class="choice-text">抱住柱子</div>
+                        </button>
+                        <button class="btn-secondary choice-btn" onclick="checkEarthquakeAnswer(false)">
+                            ${createImage('door.png', '門', '🚪')}
+                            <div class="choice-text">衝到門邊</div>
+                        </button>
+                    </div>
+                </div>
+            `,
+            init: function() {
+                window.checkEarthquakeAnswer = function(correct) {
+                    if (correct) {
+                        state.currentStage = 2;
+                        render();
+                    } else {
+                        alert('警告！錯誤選擇可能導致致命後果。\\n地震時應立即「趴下、掩護、穩住」。');
+                    }
+                };
+            }
+        }),
+
+        // 震後評估
+        2: () => ({
+            html: `
+                <div>
+                    <h2 style="color: #9ca3af;">現場狀況評估</h2>
+                    <div style="background: #1f2937; padding: 20px; border-radius: 8px; margin-bottom: 24px; border: 2px solid #374151;">
+                        <img src="${IMAGE_PATH}classroom.png" alt="地震後教室" class="scene-img" 
+                             onerror="this.outerHTML='<div class=&quot;img-placeholder&quot; style=&quot;height: 200px;&quot;><div class=&quot;img-placeholder-icon&quot;>🏚️</div><div>地震後教室場景</div></div>'">
+                        <p style="font-size: 18px; color: #d1d5db; text-align: center; margin-top: 16px;">
+                            晃動停止。教室結構受損，物品散落。
+                        </p>
+                    </div>
+                    <button id="nextBtn" class="btn-primary" style="background: #1e40af; border-color: #1e3a8a;">
+                        下一步行動 →
+                    </button>
+                </div>
+            `,
+            init: function() {
+                document.getElementById('nextBtn').onclick = function() {
+                    state.currentStage = 3;
+                    render();
+                };
+            }
+        }),
+
+        // 選擇出口
+        3: () => ({
+            html: `
+                <div>
+                    <h2>尋找逃生出口</h2>
+                    <p style="color: #9ca3af; margin-bottom: 16px;">判斷最安全的撤離路徑</p>
+                    
+                    <div style="margin-bottom: 24px;">
+                        <img src="${IMAGE_PATH}exits.png" alt="逃生出口" class="scene-img" 
+                             onerror="this.outerHTML='<div class=&quot;img-placeholder&quot; style=&quot;height: 200px;&quot;><div class=&quot;img-placeholder-icon&quot;>🚪</div><div>教室出口配置圖</div></div>'">
+                    </div>
+                    
+                    <div style="display: flex; flex-direction: column; gap: 12px;">
+                        <button class="btn-secondary" onclick="selectDoor('A')" style="display: flex; align-items: center;">
+                            <span style="background: #111827; padding: 4px 12px; border-radius: 4px; margin-right: 12px; color: #ef4444; font-family: monospace;">A</span>
+                            教室大門 (玻璃破損)
+                        </button>
+                        <button class="btn-secondary" onclick="selectDoor('B')" style="display: flex; align-items: center;">
+                            <span style="background: #111827; padding: 4px 12px; border-radius: 4px; margin-right: 12px; color: #ef4444; font-family: monospace;">B</span>
+                            殘障步道側門
+                        </button>
+                        <button class="btn-secondary" onclick="selectDoor('C')" style="display: flex; align-items: center;">
+                            <span style="background: #111827; padding: 4px 12px; border-radius: 4px; margin-right: 12px; color: #ef4444; font-family: monospace;">C</span>
+                            後方小門
+                        </button>
+                    </div>
+                </div>
+            `,
+            init: function() {
+                window.selectDoor = function(door) {
+                    if (door === 'A') {
+                        state.currentStage = 4;
+                        render();
+                    } else if (door === 'B') {
+                        alert('通道受阻：側門變形卡死，無法開啟。');
+                    } else {
+                        alert('危險區域：後方小門上方有懸掛物，且位於建築裂縫正下方。');
+                    }
+                };
+            }
+        }),
+
+        // 對外求援
+        4: () => ({
+            html: `
+                <div>
+                    <div style="display: flex; align-items: center; margin-bottom: 16px;">
+                        <span style="font-size: 2rem; margin-right: 12px;">📍</span>
+                        <div>
+                            <h2 style="font-size: 20px; margin-bottom: 4px;">對外求援</h2>
+                            <p style="font-size: 12px; color: #3b82f6;">目前位置：健康護理教室</p>
+                        </div>
+                    </div>
+                    
+                    <div style="background: #1f2937; padding: 20px; border-radius: 8px; margin-bottom: 24px; border: 2px solid #374151;">
+                        <img src="${IMAGE_PATH}map.png" alt="校園地圖" class="scene-img" 
+                             onerror="this.outerHTML='<div class=&quot;img-placeholder&quot; style=&quot;height: 200px;&quot;><div class=&quot;img-placeholder-icon&quot;>🗺️</div><div>校園地圖</div></div>'">
+                    </div>
+
+                    <div style="text-align: center; margin-bottom: 24px;">
+                        <span style="font-size: 3rem; display: inline-block; margin-bottom: 16px;">📞</span>
+                        <p style="margin-bottom: 16px;">點擊下方連結進行通話錄音</p>
+                        <a href="${padletLinks.sos}" 
+                           target="_blank" 
+                           class="btn-primary"
+                           style="background: #dc2626;">
+                            開始錄音報案
+                        </a>
+                    </div>
+
+                    <div class="hint-box">
+                        <span style="margin-right: 8px;">📡</span>
+                        任務：點擊上方按鈕進行通話錄音，完成後輸入專線號碼。
+                    </div>
+
+                    <input type="text" id="codeInput" class="input-box" placeholder="輸入報案專線">
+                    <button id="sosBtn" class="btn-primary">確認通訊連結</button>
+                </div>
+            `,
+            init: function() {
+                document.getElementById('sosBtn').onclick = createInputValidator(
+                    '119',
+                    ['112', '110'],
+                    () => { state.currentStage = 5; render(); },
+                    '通訊失敗：請輸入正確的緊急報案號碼'
+                );
+            }
+        }),
+
+        // 物資搜尋
+        5: () => ({
+            html: `
+                <div>
+                    <h2 style="color: #10b981;">🏥 物資搜尋</h2>
+                    
+                    <div style="margin-bottom: 24px;">
+                        <img src="${IMAGE_PATH}supplies.png" alt="急救物資" class="scene-img" 
+                             onerror="this.outerHTML='<div class=&quot;img-placeholder&quot; style=&quot;height: 200px;&quot;><div class=&quot;img-placeholder-icon&quot;>🏥</div><div>急救物資位置</div></div>'">
+                    </div>
+                    
+                    <div class="hint-box" style="border-color: #059669; background: rgba(5, 150, 105, 0.1);">
+                        提示：健康中心有說過，學務處會放急救物資，尋找急救包上的編號以解鎖。
+                    </div>
+
+                    <input type="text" id="codeInput" class="input-box" style="color: #10b981; border-color: #047857;" placeholder="ENTER PASSCODE">
+                    <button id="supplyBtn" class="btn-primary" style="background: #059669; border-color: #047857;">UNLOCK KIT</button>
+                </div>
+            `,
+            init: function() {
+                document.getElementById('supplyBtn').onclick = createInputValidator(
+                    '8324123',
+                    ['832428', '832444'],
+                    () => { state.currentStage = 6; render(); },
+                    'ACCESS DENIED - 密碼錯誤'
+                );
+            }
+        }),
+
+        // 環境安全
+        6: () => ({
+            html: `
+                <div>
+                    <div style="border-left: 4px solid #f59e0b; padding-left: 16px; margin-bottom: 24px;">
+                        <h2 style="color: #f59e0b;">接觸傷患</h2>
+                        <p style="color: #9ca3af;">地點：中廊 (建築物連接處)</p>
+                    </div>
+                    
+                    <p style="font-size: 20px; margin-bottom: 32px; line-height: 1.8;">
+                        發現三位同學哀號。上方有掉落碎石。<br>你的首要行動？
+                    </p>
+                    
+                    <button class="btn-secondary" onclick="checkSafety(true)" style="padding: 24px;">
+                        <div style="display: flex; align-items: center; justify-content: center;">
+                            <span style="font-size: 2rem; margin-right: 16px; color: #f59e0b;">🏃</span>
+                            <div style="text-align: left;">
+                                <div style="font-size: 18px; font-weight: bold;">建立安全區</div>
+                                <div style="font-size: 14px; color: #9ca3af;">快速移動至空曠處 (Scene Safety)</div>
+                            </div>
+                        </div>
+                    </button>
+                    
+                    <button class="btn-secondary" onclick="checkSafety(false)" style="padding: 24px;">
+                        <div style="display: flex; align-items: center; justify-content: center;">
+                            <span style="font-size: 2rem; margin-right: 16px; color: #6b7280;">🩹</span>
+                            <div style="text-align: left;">
+                                <div style="font-size: 18px; font-weight: bold;">原地急救</div>
+                                <div style="font-size: 14px; color: #9ca3af;">拿出止血帶協助止血</div>
+                            </div>
+                        </div>
+                    </button>
+                </div>
+            `,
+            init: function() {
+                window.checkSafety = function(correct) {
+                    if (correct) {
+                        state.currentStage = 7;
+                        render();
+                    } else {
+                        alert('危險！你處於「熱區」(Hot Zone)。\\nSMARTER原則第一條：Scene Safety。請先確保自身與傷患脫離危險環境。');
+                    }
+                };
+            }
+        }),
+
+        // 檢傷分類
+        7: () => ({
+            html: `
+                <div>
+                    <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 16px;">
+                        <h2 style="color: #ef4444;">START 檢傷分類</h2>
+                        <span style="font-size: 12px; color: #9ca3af;">點擊箭頭排序</span>
+                    </div>
+                    
+                    <div id="triageList" style="margin-bottom: 24px;">
+                        載入中...
+                    </div>
+                    
+                    <button id="checkSortBtn" class="btn-primary">確認優先順序</button>
+                </div>
+            `,
+            init: function() {
+                // 初始化排序
+                if (state.triageOrder.length === 0) {
+                    state.triageOrder = [...victims].sort(() => Math.random() - 0.5);
+                }
+                
+                // 全域函數必須在這裡定義
+                window.moveTriageItem = function(index, direction) {
+                    const newIndex = index + direction;
+                    if (newIndex >= 0 && newIndex < state.triageOrder.length) {
+                        // 交換位置
+                        const temp = state.triageOrder[index];
+                        state.triageOrder[index] = state.triageOrder[newIndex];
+                        state.triageOrder[newIndex] = temp;
+                        renderTriageList();
+                    }
+                };
+                
+                // 渲染傷患列表的函數
+                function renderTriageList() {
+                    const list = document.getElementById('triageList');
+                    if (!list) return;
+                    
+                    list.innerHTML = state.triageOrder.map((item, index) => {
+                        return `
+                            <div class="sortable-item">
+                                <div style="flex: 1;">
+                                    <div style="font-weight: bold; font-size: 14px; color: white;">${item.text}</div>
+                                    <div style="font-size: 12px; color: #9ca3af;">${item.desc}</div>
+                                </div>
+                                <div style="display: flex; flex-direction: column; gap: 4px; margin-left: 8px;">
+                                    <button class="arrow-btn" onclick="moveTriageItem(${index}, -1)">▲</button>
+                                    <button class="arrow-btn" onclick="moveTriageItem(${index}, 1)">▼</button>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                }
+                
+                // 初始渲染
+                renderTriageList();
+                
+                // 確認按鈕
+                const checkBtn = document.getElementById('checkSortBtn');
+                if (checkBtn) {
+                    checkBtn.onclick = function() {
+                        const currentOrderIds = state.triageOrder.map(v => v.id);
+                        if (JSON.stringify(currentOrderIds) === JSON.stringify(correctTriageOrder)) {
+                            state.currentStage = 8;
+                            render();
+                        } else {
+                            alert('檢傷邏輯錯誤。\\n回憶 START 原則：\\n1. 能走嗎？\\n2. 有呼吸嗎？\\n3. 呼吸頻率/微血管充填/意識狀態');
+                        }
+                    };
+                }
+            }
+        }),
+
+        // 急救處理（通用模板）
+        8: () => createTreatmentStage('C', '右手肘動脈噴射狀出血', padletLinks.patientC, 'wd343', 9),
+        9: () => createTreatmentStage('A', '大腿大量出血', padletLinks.patientA, 'stop893', 10),
+        10: () => createTreatmentStage('D', '休克徵兆、呼吸急促', padletLinks.patientD, '741314', 11),
+
+        // 戰術決策
+        11: () => ({
+            html: `
+                <div>
+                    <h2 style="color: #3b82f6; margin-bottom: 16px;">戰術決策</h2>
+                    <p style="margin-bottom: 24px; color: #d1d5db;">初步檢傷完成。請勾選後續行動方案 (複選)：</p>
+                    
+                    <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px;">
+                        <label style="display: flex; align-items: center; gap: 12px; padding: 16px; border: 1px solid #4b5563; border-radius: 8px; cursor: pointer; background: #1f2937;">
+                            <input type="checkbox" value="1" style="width: 24px; height: 24px;">
+                            <span>指派人員引導救護車</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 12px; padding: 16px; border: 1px solid #4b5563; border-radius: 8px; cursor: pointer; background: #1f2937;">
+                            <input type="checkbox" value="2" style="width: 24px; height: 24px;">
+                            <span>留守人員監測傷患生命徵象</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 12px; padding: 16px; border: 1px solid #4b5563; border-radius: 8px; cursor: pointer; background: #1f2937;">
+                            <input type="checkbox" value="3" style="width: 24px; height: 24px;">
+                            <span>外圍巡邏搜尋其他倖存者</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 12px; padding: 16px; border: 1px solid #4b5563; border-radius: 8px; cursor: pointer; background: #1f2937;">
+                            <input type="checkbox" value="4" style="width: 24px; height: 24px;">
+                            <span>全員進入建築物深度搜索</span>
+                        </label>
+                    </div>
+                    
+                    <button id="multiSubmit" class="btn-primary">確認部署</button>
+                </div>
+            `,
+            init: function() {
+                document.getElementById('multiSubmit').onclick = function() {
+                    const checked = Array.from(document.querySelectorAll('input[type="checkbox"]:checked')).map(cb => cb.value);
+                    const isCorrect = checked.includes('1') && checked.includes('2') && checked.includes('3') && 
+                                    !checked.includes('4') && checked.length === 3;
+                    
+                    if (isCorrect) {
+                        state.currentStage = 12;
+                        render();
+                    } else {
+                        alert('請重新思考：\\n1. 外部救援需要引導嗎？\\n2. 傷患是否需要持續監控？\\n3. 建築結構是否安全？');
+                    }
+                };
+            }
+        }),
+
+        // 最終骨折處理
+        12: () => ({
+            html: `
+                <div>
+                    <div style="background: #7f1d1d; color: white; text-align: center; padding: 8px; margin-bottom: 16px; font-weight: bold; letter-spacing: 0.1em;" class="pulse-red">
+                        !!! NEW CASUALTY DETECTED !!!
+                    </div>
+                    <h2 style="font-size: 20px; margin-bottom: 8px;">行政大樓前</h2>
+                    <p style="color: #ef4444; margin-bottom: 16px; font-weight: bold; border-bottom: 1px solid #7f1d1d; padding-bottom: 8px;">
+                        傷勢：左小腿開放性骨折 (骨骼外露)
+                    </p>
+                    
+                    <div style="background: #1f2937; padding: 16px; border-radius: 8px; border: 1px solid #374151; margin-bottom: 24px;">
+                        <ul style="list-style: none; padding: 0; margin: 0; color: #d1d5db; font-size: 14px;">
+                            <li style="margin-bottom: 8px;">➤ 已完成止血</li>
+                            <li style="margin-bottom: 8px;">➤ 任務：進行骨折固定</li>
+                            <li style="margin-bottom: 16px;">➤ 紀錄：多角度拍攝上傳</li>
+                        </ul>
+                        <a href="${padletLinks.final}" 
+                           target="_blank" 
+                           class="btn-primary" 
+                           style="background: #f59e0b; border-color: #d97706; display: block; text-align: center;">
+                            📸 UPLOAD EVIDENCE
+                        </a>
+                    </div>
+
+                    <input type="text" id="codeInput" class="input-box" placeholder="FINAL CODE">
+                    <button id="btnEnd" class="btn-primary">MISSION COMPLETE</button>
+                </div>
+            `,
+            init: function() {
+                document.getElementById('btnEnd').onclick = createInputValidator(
+                    'end',
+                    [],
+                    () => { 
+                        state.currentStage = 13; 
+                        render(); 
+                    },
+                    '請輸入正確的最終密碼'
+                );
+            }
+        }),
+
+        // 完成證書
+        13: () => {
+            const finalTime = stopTimer();
+            return {
+                html: `
+                    <div style="display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; min-height: 80vh;">
+                        <div class="certificate" style="width: 100%; max-width: 500px;">
+                            <div class="certificate-inner">
+                                <div class="medal">🏅</div>
+                                <h1 style="font-size: 2rem; margin: 16px 0; text-transform: uppercase;">MISSION ACCOMPLISHED</h1>
+                                <p style="color: #f59e0b; font-family: monospace; margin-bottom: 16px; font-size: 20px;">ELITE RESCUE TEAM</p>
+                                
+                                <div style="border-top: 1px solid #4b5563; border-bottom: 1px solid #4b5563; padding: 16px; margin: 16px 0; background: #111827;">
+                                    <p style="color: #9ca3af; font-size: 12px; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 4px;">Total Operation Time</p>
+                                    <p style="font-size: 3rem; font-family: monospace; font-weight: bold; color: #ef4444;">${finalTime}</p>
+                                </div>
+                                
+                                <div style="text-align: left; font-size: 14px; color: #d1d5db; margin-top: 16px;">
+                                    <p style="margin-bottom: 8px;">✅ 裝備歸位：急救包、包紮用品</p>
+                                    <p style="margin-bottom: 8px;">✅ 數據回報：填寫後測表單</p>
+                                    <p>✅ 認證：向指揮官(老師)領取證照</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <p style="color: #ef4444; font-weight: bold; margin: 24px 0; font-size: 18px;" class="pulse-red">
+                            📸 SCREENSHOT THIS RECORD
+                        </p>
+                        
+                        <button onclick="location.reload()" style="color: #6b7280; text-decoration: underline; background: none; border: none; cursor: pointer; font-size: 14px; text-transform: uppercase; letter-spacing: 0.1em;">
+                            Restart Simulation
+                        </button>
+                    </div>
+                `,
+                init: function() {}
+            };
+        }
+    };
+
+    // 急救處理關卡模板
+    function createTreatmentStage(patient, desc, padletLink, password, nextStage) {
+        return {
+            html: `
+                <div>
+                    <div class="mission-box" style="border-left-color: #dc2626;">
+                        <h2 style="font-size: 20px; color: #ef4444; margin-bottom: 4px;">
+                            ${patient === 'C' ? '優先' : '次要'}目標：傷患 ${patient}
+                        </h2>
+                        <p style="color: white;">${desc}</p>
+                    </div>
+
+                    <div style="background: #1f2937; padding: 16px; border-radius: 8px; border: 1px solid #374151; margin-bottom: 24px;">
+                        <p style="font-size: 14px; color: #9ca3af; margin-bottom: 8px; font-family: monospace;">TASK_PROTOCOL:</p>
+                        <ul style="list-style: none; padding: 0; margin: 0 0 16px 0; color: #d1d5db; font-size: 14px;">
+                            <li style="margin-bottom: 8px;">✓ 主手進行急救處置</li>
+                            <li style="margin-bottom: 8px;">✓ 副手錄影並拍照存證</li>
+                            <li style="margin-bottom: 8px;">✓ 資料上傳雲端</li>
+                        </ul>
+                        <a href="${padletLink}" 
+                           target="_blank" 
+                           class="btn-primary" 
+                           style="background: #f59e0b; border-color: #d97706; display: block; text-align: center;">
+                            ☁️ 上傳現場紀錄 (Padlet)
+                        </a>
+                    </div>
+
+                    <input type="text" id="codeInput" class="input-box" placeholder="傷患生命密碼">
+                    <button id="btnTreat" class="btn-primary">任務確認</button>
+                </div>
+            `,
+            init: function() {
+                document.getElementById('btnTreat').onclick = createInputValidator(
+                    password.toLowerCase(),
+                    [],
+                    () => { state.currentStage = nextStage; render(); },
+                    '密碼錯誤，請重新輸入'
+                );
+            }
+        };
+    }
+
+    // 初始化
+    window.onload = function() {
+        setTimeout(() => {
+            render();
+        }, 500);
+    };
+
+    // 全域錯誤處理
+    window.onerror = function(msg, url, lineNo, columnNo, error) {
+        console.error('錯誤:', msg, 'at line', lineNo);
+        return true;
+    };
+</script>
+
+</body>
+</html>
